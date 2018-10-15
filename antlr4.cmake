@@ -20,10 +20,13 @@ ExternalProject_Add(antlr4
   BUILD_BYPRODUCTS ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime.lib ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime.dll ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime-static.lib
 )
 
+link_directories(${ANTLR4_RUNTIME_DIR}/lib)
+
 function(antlr_gen _target _input)
 
   add_dependencies(${_target} antlr4)
 
+  get_filename_component(_input "${_input}" ABSOLUTE)
   get_filename_component(_output "${_input}" NAME_WE)
 
   set(_output ${CMAKE_CURRENT_BINARY_DIR}/${_output})
@@ -53,7 +56,10 @@ function(antlr_gen _target _input)
     ${ANTLR4_RUNTIME_DIR}/include/antlr4-runtime
     ${CMAKE_CURRENT_BINARY_DIR}
   )
+    #[[
   target_link_libraries(${_target} PRIVATE
-    ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime.lib
+    ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime
   )
+  ]]
+  target_link_libraries(${_target} PRIVATE antlr4-runtime)
 endfunction()
