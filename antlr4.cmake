@@ -22,44 +22,67 @@ ExternalProject_Add(antlr4
 
 link_directories(${ANTLR4_RUNTIME_DIR}/lib)
 
-function(antlr_gen _target _input)
+#[[
+antlr_gen - Generates antlr stubs
+Arguments:
+_target     - cmake target name (for adding include directories and link libs)
+_input      - path to grammar.g4
+_namespace  - generated classes will be nested in _namespace
+_visitor    - TRUE/FALSE to generate visitors
+_listener   - TRUE/FALSE to generate listeners
+]]
+
+function(antlr_gen _target _input _namespace _visitor _listener)
 
   add_dependencies(${_target} antlr4)
 
   get_filename_component(_input "${_input}" ABSOLUTE)
   get_filename_component(_output "${_input}" NAME_WE)
 
-  set(_output ${CMAKE_CURRENT_BINARY_DIR}/${_output})
+  set(_output ${CMAKE_CURRENT_BINARY_DIR}/generated/${_output})
 
   set(_outputs 
-    ${_output}BaseListener.cpp
-    ${_output}BaseListener.h
-    ${_output}BaseVisitor.cpp
-    ${_output}BaseVisitor.h
     ${_output}Lexer.cpp
     ${_output}Lexer.h
-    ${_output}Listener.cpp
-    ${_output}Listener.h
     ${_output}Parser.cpp
     ${_output}Parser.h
-    ${_output}Visitor.cpp
-    ${_output}Visitor.h
   )
+
+  set(_visitor_arg "-no-visitor")
+  if(${_visitor})
+    set(_visitor_arg "-visitor")
+    set(_output
+      ${_output}
+      ${_output}BaseVisitor.cpp
+      ${_output}BaseVisitor.h
+      ${_output}Visitor.cpp
+      ${_output}Visitor.h
+    )
+  endif()
+
+  set(_listener_arg "-no-listener")
+  if(${_listener})
+    set(_listener_arg "-listener")
+    set(_output 
+      ${_output}
+      ${_output}BaseListener.cpp
+      ${_output}BaseListener.h
+      ${_output}Listener.cpp
+      ${_output}Listener.h
+    )
+  endif()
 
   add_custom_command(OUTPUT ${_outputs}
     DEPENDS ${_input}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} VERBATIM
-    COMMAND ${Java_JAVA_EXECUTABLE} -Xmx500M -cp ${ANTLR_JAR} org.antlr.v4.Tool -visitor -Dlanguage=Cpp ${_input}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated VERBATIM
+    COMMAND ${Java_JAVA_EXECUTABLE} -Xmx500M -cp ${ANTLR_JAR} org.antlr.v4.Tool ${_visitor_arg} ${_listener_arg} -package ${_namespace} -Dlanguage=Cpp ${_input}
   )
   target_sources(${_target} PRIVATE ${_outputs})
   target_include_directories(${_target} PRIVATE 
     ${ANTLR4_RUNTIME_DIR}/include/antlr4-runtime
-    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/generated
   )
-    #[[
-  target_link_libraries(${_target} PRIVATE
-    ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime
-  )
-  ]]
+
+
   target_link_libraries(${_target} PRIVATE antlr4-runtime)
 endfunction()
