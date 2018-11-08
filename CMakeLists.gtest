@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(googletest)
+include(ExternalProject)
+
+set(PARENT_TARGET_BIN_DIR "@CMAKE_RUNTIME_OUTPUT_DIRECTORY@")
+set(GTEST_INSTALL_DLL)
+if(PARENT_TARGET_BIN_DIR)
+  set(GTEST_INSTALL_DLL ${CMAKE_COMMAND} -E copy @GTEST_INSTALL_DIR@/bin/gtest.dll @GTEST_INSTALL_DIR@/bin/gtest_main.dll @CMAKE_RUNTIME_OUTPUT_DIRECTORY@)
+endif()
+
+ExternalProject_Add(
+  gtest
+  GIT_REPOSITORY  https://github.com/google/googletest.git
+  GIT_TAG         release-1.8.1
+  GIT_SHALLOW     TRUE
+  UPDATE_COMMAND  ""
+  PATCH_COMMAND   ""
+  CMAKE_ARGS      -Dgtest_force_shared_crt=TRUE -Dgtest_build_samples=FALSE -Dgtest_build_tests=FALSE -DBUILD_GMOCK=FALSE -DINSTALL_GTEST=TRUE -DBUILD_SHARED_LIBS=TRUE -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=@GTEST_INSTALL_DIR@ 
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+  COMMAND         ${GTEST_INSTALL_DLL}
+)
