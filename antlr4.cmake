@@ -1,35 +1,49 @@
 include_guard(GLOBAL)
-include(ExternalProject)
-
 find_package(Java COMPONENTS Runtime REQUIRED)
 
-set(ANTLR_JAR ${CMAKE_CURRENT_BINARY_DIR}/antlr-4.7.1-complete.jar)
+set(CMAKE_UTILS_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-file(DOWNLOAD http://www.antlr.org/download/antlr-4.7.1-complete.jar ${ANTLR_JAR} )
-
-set(ANTLR4_RUNTIME_DIR ${CMAKE_CURRENT_BINARY_DIR}/antlr4)
-
-set(ANTLR4_INCLUDE_DIR ${ANTLR4_RUNTIME_DIR}/include/antlr4-runtime)
-
-set(ANTLR4_COPY_DLL)
-if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-  set(ANTLR4_COPY_DLL ${CMAKE_COMMAND} -E copy ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+if(NOT ANTLR4_INSTALL_DIR)
+  set(ANTLR4_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/antlr4")
 endif()
 
-ExternalProject_Add(antlr4
-  PREFIX .antlr4
-  GIT_REPOSITORY https://github.com/antlr/antlr4.git
-  GIT_TAG 4.7.1
-  GIT_SHALLOW TRUE
-  SOURCE_SUBDIR runtime/Cpp
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ANTLR4_RUNTIME_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=TRUE -BUILD_TESTS=FALSE -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=${RUNTIME_OUTPUT_DIRECTORY} -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${LIBRARY_OUTPUT_DIRECTORY}
-  UPDATE_COMMAND ""
-  PATCH_COMMAND ""
-  BUILD_BYPRODUCTS ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime.lib ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime.dll ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime-static.lib
-  INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
-  COMMAND ${ANTLR4_COPY_DLL}
-)
-link_directories(${ANTLR4_RUNTIME_DIR}/lib)
+if(NOT ANTLR4_BUILD_DIR)
+  set(ANTLR4_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/.antlr4")
+endif()
+
+if(NOT ANTLR_JAR)
+  set(ANTLR_JAR http://www.antlr.org/download/antlr-4.7.1-complete.jar)
+endif()
+
+function(build_antlr4)
+  set(_config_stamp "${ANTLR4_BUILD_DIR}/.config.stamp")
+  set(_build_stamp "${ANTLR4_BUILD_DIR}/.build.stamp")
+  
+  if(NOT EXISTS ${_config_stamp})
+     configure_file(${CMAKE_UTILS_DIR}/CMakeLists.antlr4 "${ANTLR4_BUILD_DIR}/CMakeLists.txt" @ONLY)
+    execute_process(WORKING_DIRECTORY "${ANTLR4_BUILD_DIR}" 
+      COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+      )
+    execute_process(WORKING_DIRECTORY "${ANTLR4_BUILD_DIR}" 
+      COMMAND ${CMAKE_COMMAND} -E touch ${_config_stamp}
+      )
+  endif()
+  if(NOT EXISTS ${_build_stamp})
+    execute_process(WORKING_DIRECTORY "${ANTLR4_BUILD_DIR}" 
+      COMMAND ${CMAKE_COMMAND} --build .
+      COMMAND ${CMAKE_COMMAND} -E touch ${_build_stamp}
+      )
+    execute_process(WORKING_DIRECTORY "${ANTLR4_BUILD_DIR}" 
+      COMMAND ${CMAKE_COMMAND} -E touch ${_build_stamp}
+      )
+  endif()
+  if(NOT "" STREQUAL "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+    file(COPY ${ANTLR4_INSTALL_DIR}/lib/antlr4-runtime.dll DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+  endif()
+  include_directories(${ANTLR4_INSTALL_DIR}/include)
+  link_directories(${ANTLR4_INSTALL_DIR}/lib)
+endfunction()
+
 
 #[[
 antlr_gen - Generates antlr stubs
@@ -43,7 +57,9 @@ _listener   - TRUE/FALSE to generate listeners
 
 function(antlr_gen _target _input _namespace _visitor _listener)
 
-  add_dependencies(${_target} antlr4)
+  if(NOT EXISTS ${ANTLR4_BUILD_DIR}/antlr4.jar)
+    file(DOWNLOAD ${ANTLR_JAR} ${ANTLR4_BUILD_DIR}/antlr4.jar)
+  endif()
 
   get_filename_component(_input "${_input}" ABSOLUTE)
   get_filename_component(_output "${_input}" NAME_WE)
@@ -81,17 +97,15 @@ function(antlr_gen _target _input _namespace _visitor _listener)
     )
   endif()
 
-  add_custom_command(OUTPUT ${_outputs} ${CMAKE_CURRENT_BINARY_DIR}/antlr4-runtime.dll
+  add_custom_command(OUTPUT ${_outputs}
     DEPENDS ${_input}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated VERBATIM
-    COMMAND ${Java_JAVA_EXECUTABLE} -Xmx500M -cp ${ANTLR_JAR} org.antlr.v4.Tool ${_visitor_arg} ${_listener_arg} -package ${_namespace} -Dlanguage=Cpp ${_input}
-    COMMAND ${CMAKE_COMMAND} -E copy ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime.dll ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${Java_JAVA_EXECUTABLE} -Xmx500M -cp ${ANTLR4_BUILD_DIR}/antlr4.jar org.antlr.v4.Tool ${_visitor_arg} ${_listener_arg} -package ${_namespace} -Dlanguage=Cpp ${_input}
   )
   
   target_sources(${_target} PRIVATE ${_outputs})
 
   target_include_directories(${_target} PRIVATE 
-    ${ANTLR4_INCLUDE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}/generated
   )
 
