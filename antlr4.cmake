@@ -9,6 +9,8 @@ file(DOWNLOAD http://www.antlr.org/download/antlr-4.7.1-complete.jar ${ANTLR_JAR
 
 set(ANTLR4_RUNTIME_DIR ${CMAKE_CURRENT_BINARY_DIR}/antlr4)
 
+set(ANTLR4_INCLUDE_DIR ${ANTLR4_RUNTIME_DIR}/include/antlr4-runtime)
+
 set(ANTLR4_COPY_DLL)
 if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
   set(ANTLR4_COPY_DLL ${CMAKE_COMMAND} -E copy ${ANTLR4_RUNTIME_DIR}/lib/antlr4-runtime.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
@@ -89,7 +91,7 @@ function(antlr_gen _target _input _namespace _visitor _listener)
   target_sources(${_target} PRIVATE ${_outputs})
 
   target_include_directories(${_target} PRIVATE 
-    ${ANTLR4_RUNTIME_DIR}/include/antlr4-runtime
+    ${ANTLR4_INCLUDE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}/generated
   )
 
