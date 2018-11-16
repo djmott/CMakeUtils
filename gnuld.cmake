@@ -1,3 +1,4 @@
+include_guard(GLOBAL)
 
 find_program(GNULD NAMES ld ld.exe)
 

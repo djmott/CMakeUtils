@@ -1,0 +1,35 @@
+cmake_minimum_required(VERSION 3.10)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMakeUtils)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
+# Set a default build type if none was specified
+set(default_build_type "Release")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+  set(default_build_type "Debug")
+endif()
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "No CMAKE_BUILD_TYPE specified. Defaulting to '${default_build_type}'.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+include(FeatureSummary)
+feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES)
+
+project(PROJECT_NAME VERSION 0.1.0.0)
+
+enable_language(CXX)
+enable_testing()
+
+
+
+if("Debug" STREQUAL "${CMAKE_BUILD_TYPE}")
+  add_definitions(-DDEBUG)
+  add_definitions(-D_DEBUG)
+else()
+  add_definitions(-DNDEBUG)
+endif()
+

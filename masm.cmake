@@ -1,3 +1,4 @@
+include_guard(GLOBAL)
 
 find_program(MASM NAMES "ml.exe" "ml64.exe")
 
