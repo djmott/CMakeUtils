@@ -40,7 +40,7 @@ function(build_antlr4)
   if(NOT "" STREQUAL "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     file(COPY ${ANTLR4_INSTALL_DIR}/lib/antlr4-runtime.dll DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
   endif()
-  include_directories(${ANTLR4_INSTALL_DIR}/include)
+  include_directories(${ANTLR4_INSTALL_DIR}/include/antlr4-runtime)
   link_directories(${ANTLR4_INSTALL_DIR}/lib)
 endfunction()
 
