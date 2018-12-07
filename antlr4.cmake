@@ -20,8 +20,8 @@ function(build_antlr4)
   set(_build_stamp "${ANTLR4_BUILD_DIR}/.build.stamp")
   
   if(NOT EXISTS ${_config_stamp})
-     configure_file(${CMAKE_UTILS_DIR}/CMakeLists.antlr4 "${ANTLR4_BUILD_DIR}/CMakeLists.txt" @ONLY)
-    execute_process(WORKING_DIRECTORY "${ANTLR4_BUILD_DIR}" 
+    configure_file(${CMAKE_UTILS_DIR}/CMakeLists.antlr4 "${ANTLR4_BUILD_DIR}/CMakeLists.txt" @ONLY)
+    execute_process(WORKING_DIRECTORY "${ANTLR4_BUILD_DIR}"
       COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
       )
     execute_process(WORKING_DIRECTORY "${ANTLR4_BUILD_DIR}" 
@@ -38,7 +38,11 @@ function(build_antlr4)
       )
   endif()
   if(NOT "" STREQUAL "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-    file(COPY ${ANTLR4_INSTALL_DIR}/lib/antlr4-runtime.dll DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    if(MSVC)
+      file(COPY ${ANTLR4_INSTALL_DIR}/lib/antlr4-runtime.dll DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    else()
+      file(COPY ${ANTLR4_INSTALL_DIR}/lib/libantlr4-runtime.dll DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    endif()
   endif()
   include_directories(${ANTLR4_INSTALL_DIR}/include/antlr4-runtime)
   link_directories(${ANTLR4_INSTALL_DIR}/lib)
