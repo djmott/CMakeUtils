@@ -1,12 +1,20 @@
 include_guard(GLOBAL)
 
-find_program(GNULD NAMES ld ld.exe)
+find_program(LD
+  NAMES ld ld.exe
+  DOC "Path to GNU ld"
+  )
 
+if(NOT EXISTS ${LD})
+  message(FATAL_ERROR "GNU ld not found")
+endif()
 
-find_program(MASM NAMES "ml.exe" "ml64.exe")
+function(ld)
+  set(options MAP LISTING)
+  set(single_args INPUT OUTPUT FORMAT SYNTAX DEBUG_FORMAT LIST_FILE MAP_FILE)
+  set(multi_args DEFINES)
+  cmake_parse_arguments(yasm "${options}" "${single_args}" "${mutli_args}" ${ARGN})
 
-function(ldlink _target _script)
-  get_filename_component(_script ${_script} ABSOLUTE)
 
   add_custom_command(OUTPUT ${_target}
     DEPENDS ${_script}

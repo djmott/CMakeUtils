@@ -1,6 +1,6 @@
 
 find_program(YASM
-  yasm NAMES yasm yasm.exe
+  NAMES yasm yasm.exe
   PATHS /usr/bin /bin
   DOC "Path to yasm"
   )
@@ -63,7 +63,7 @@ function(yasm)
   set(options MAP LISTING)
   set(single_args INPUT OUTPUT FORMAT SYNTAX DEBUG_FORMAT LIST_FILE MAP_FILE)
   set(multi_args DEFINES)
-  cmake_parse_arguments(yasm "${options}" "${single_args}" "${mutli_args}" ${ARGN})
+  cmake_parse_arguments(yasm "${options}" "${single_args}" "${multi_args}" ${ARGN})
 
   set(_output ${yasm_OUTPUT})
   get_filename_component(yasm_INPUT ${yasm_INPUT} ABSOLUTE)
