@@ -1,5 +1,4 @@
 include_guard(GLOBAL)
-include(GoogleTest)
 enable_testing()
 
 
@@ -19,45 +18,27 @@ if(NOT EXISTS ${GTEST_DIR})
     WORKING_DIRECTORY "${GTEST_PREFIX}"
     COMMAND ${CMAKE_COMMAND} --build .
   )
-
-  list(APPEND CMAKE_PREFIX_PATH "${GTEST_PREFIX}")
 endif()
 
-
-
-
-#[[
-set(CMAKE_UTILS_DIR ${CMAKE_CURRENT_LIST_DIR})
-set(GTEST_BUILD_TYPE Release)
-
-if(NOT GTEST_INSTALL_DIR)
-  set(GTEST_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/gtest")
+if(NOT "" STREQUAL "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+  file(GLOB _tmp "${GTEST_DIR}/bin/*")
+  file(COPY ${_tmp} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 endif()
 
-function(build_gtest _GTEST_BUILD_TYPE)
-  set(GTEST_BUILD_TYPE _GTEST_BUILD_TYPE)
-  if(NOT EXISTS ${GTEST_INSTALL_DIR})
-    configure_file(${CMAKE_UTILS_DIR}/CMakeLists.gtest "${CMAKE_CURRENT_BINARY_DIR}/.gtest/CMakeLists.txt" @ONLY)
+list(APPEND CMAKE_PREFIX_PATH "${GTEST_DIR}/lib/cmake/GTest")
+set(GTEST_INCLUDE_DIR "${GTEST_DIR}/include")
+if("Debug" STREQUAL "${CMAKE_BUILD_TYPE}")
+  set(GTEST_LIBRARY "${GTEST_DIR}/lib/gtestd")
+  set(GTEST_MAIN_LIBRARY "${GTEST_DIR}/lib/gtest_maind")
+else()
+  set(GTEST_LIBRARY "${GTEST_DIR}/lib/gtest")
+  set(GTEST_MAIN_LIBRARY "${GTEST_DIR}/lib/gtest_main")
+endif()
 
-    execute_process(
-      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.gtest/"
-      COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-    )
+if(MSVC)
+  set(GTEST_LIBRARY "${GTEST_LIBRARY}.lib")
+  set(GTEST_MAIN_LIBRARY "${GTEST_MAIN_LIBRARY}.lib")
+endif()
 
-    execute_process(
-      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.gtest/"
-      COMMAND ${CMAKE_COMMAND} --build .
-    )
-
-    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_BINARY_DIR}/.gtest")
-  endif()
-  set(GTEST_ROOT ${GTEST_INSTALL_DIR})
-  #find_package(GTest REQUIRED)
-  include_directories(${GTEST_INSTALL_DIR}/include)
-  link_directories(${GTEST_INSTALL_DIR}/lib)
-endfunction()
-
-function(add_gtest _target)
-  target_link_libraries(${_target} PRIVATE ${GTEST_INSTALL_DIR}/lib/gtestd.lib)
-endfunction()
-]]
+find_package(GTest REQUIRED)
+include(GoogleTest)
