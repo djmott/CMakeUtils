@@ -3,6 +3,30 @@ include(GoogleTest)
 enable_testing()
 
 
+set(GTEST_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/.gtest")
+set(GTEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/gtest")
+
+if(NOT EXISTS ${GTEST_DIR})
+  file(MAKE_DIRECTORY ${GTEST_PREFIX})
+  configure_file(${CMAKE_CURRENT_LIST_DIR}/CMakeLists.gtest "${GTEST_PREFIX}/CMakeLists.txt" @ONLY)
+
+  execute_process(
+    WORKING_DIRECTORY "${GTEST_PREFIX}"
+    COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+  )
+
+  execute_process(
+    WORKING_DIRECTORY "${GTEST_PREFIX}"
+    COMMAND ${CMAKE_COMMAND} --build .
+  )
+
+  list(APPEND CMAKE_PREFIX_PATH "${GTEST_PREFIX}")
+endif()
+
+
+
+
+#[[
 set(CMAKE_UTILS_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(GTEST_BUILD_TYPE Release)
 
@@ -34,5 +58,6 @@ function(build_gtest _GTEST_BUILD_TYPE)
 endfunction()
 
 function(add_gtest _target)
-target_link_libraries(${_target} PRIVATE ${GTEST_INSTALL_DIR}/lib/gtestd.lib)
+  target_link_libraries(${_target} PRIVATE ${GTEST_INSTALL_DIR}/lib/gtestd.lib)
 endfunction()
+]]
