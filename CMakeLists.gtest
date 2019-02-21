@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION @CMAKE_VERSION@)
 
 project(googletest)
 include(ExternalProject)
 
-set(GIT_EXECUTABLE @GIT_EXECUTABLE@)
+set(GIT_EXECUTABLE "@GIT_EXECUTABLE@")
+
+find_package(Git REQUIRED)
 
 ExternalProject_Add(
   gtest

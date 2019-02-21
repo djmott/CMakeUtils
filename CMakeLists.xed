@@ -1,0 +1,35 @@
+cmake_minimum_required(VERSION @CMAKE_VERSION@)
+
+include(ExternalProject)
+
+set(GIT_EXECUTABLE "@GIT_EXECUTABLE@")
+set(Python2_EXECUTABLE "@Python2_EXECUTABLE@")
+
+find_package(Python2 COMPONENTS Interpreter REQUIRED)
+
+find_package(Git REQUIRED)
+
+ExternalProject_Add(mbuild_download
+  PREFIX download
+  SOURCE_DIR mbuild
+  GIT_REPOSITORY https://github.com/intelxed/mbuild.git
+  GIT_SHALLOW TRUE
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+)
+
+ExternalProject_Add(xed_download
+  PREFIX download
+  SOURCE_DIR xed
+  GIT_REPOSITORY https://github.com/intelxed/xed.git
+  GIT_SHALLOW TRUE
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND Python2::Interpreter ../../../xed/mfile.py --install-dir=${CMAKE_CURRENT_BINARY_DIR}/../xed install
+  INSTALL_COMMAND ""
+)
+

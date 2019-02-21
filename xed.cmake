@@ -1,21 +1,26 @@
 include_guard(GLOBAL)
-include(ExternalProject)
 
 find_package(Python2 COMPONENTS Interpreter REQUIRED)
 find_package(Git REQUIRED)
 
-set(XED_DIR ${CMAKE_CURRENT_BINARY_DIR}/xed)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/CMakeLists.xed ${CMAKE_CURRENT_BINARY_DIR}/.xed/CMakeLists.txt @ONLY)
 
-file(MAKE_DIRECTORY ${XED_DIR})
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.xed
+)
 
-add_custom_target(xed_checkout
-  WORKING_DIRECTORY ${XED_DIR} VERBATIM
-  COMMAND ${GIT_EXECUTABLE} clone https://github.com/intelxed/xed.git xed
-  COMMAND ${GIT_EXECUTABLE} clone https://github.com/intelxed/mbuild.git mbuild
-  )
+execute_process(
+  COMMAND ${CMAKE_COMMAND} --build .
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.xed
+)
 
-add_custom_target(xed_build ALL
-  DEPENDS xed_checkout
-  WORKING_DIRECTORY ${XED_DIR}/xed
-  COMMAND ${Python2_EXECUTABLE} mfile.py install
-  )
+
+add_library(xed STATIC IMPORTED GLOBAL)
+add_library(xed-ild STATIC IMPORTED GLOBAL)
+
+set_target_properties(xed PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/xed/lib/xed.lib)
+set_target_properties(xed-ild PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/xed/lib/xed-ild.lib)
+
+target_include_directories(xed INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/xed/include)
+target_include_directories(xed-ild INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/xed/include)
