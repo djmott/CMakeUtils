@@ -1,12 +1,11 @@
 include_guard(GLOBAL)
 
-find_package(Python2 COMPONENTS Interpreter REQUIRED)
-find_package(Git REQUIRED)
+
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/CMakeLists.xed ${CMAKE_CURRENT_BINARY_DIR}/.xed/CMakeLists.txt @ONLY)
 
 execute_process(
-  COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
+  COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" -DGIT_EXECUTABLE=${GIT_EXECUTABLE} -DPython2_EXECUTABLE=${Python2_EXECUTABLE}
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.xed
 )
 
